@@ -73,7 +73,7 @@ class Capybara::Server
 private
 
   def find_available_port
-    @port = 9887
+    @port = Capybara.server_start_port || 9887
     @port += 1 while is_port_open?(@port) and not is_running_on_port?(@port)
   end
 
