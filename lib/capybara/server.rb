@@ -24,7 +24,7 @@ class Capybara::Server
   end
 
   def host
-    "localhost" 
+    Capybara.local_host_address || "localhost" 
   end
 
   def url(path)
@@ -78,7 +78,7 @@ private
   end
 
   def is_running_on_port?(tested_port)
-    res = Net::HTTP.start(host, tested_port) { |http| http.get('/__identify__') }
+    res = Net::HTTP.start("localhost", tested_port) { |http| http.get('/__identify__') }
 
     if res.is_a?(Net::HTTPSuccess) or res.is_a?(Net::HTTPRedirection)
       return res.body == @app.object_id.to_s
@@ -90,7 +90,7 @@ private
   def is_port_open?(tested_port)
     Timeout::timeout(1) do
       begin
-        s = TCPSocket.new(host, tested_port)
+        s = TCPSocket.new("localhost", tested_port)
         s.close
         return true
       rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH

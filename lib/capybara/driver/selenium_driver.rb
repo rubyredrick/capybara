@@ -65,12 +65,30 @@ class Capybara::Driver::Selenium < Capybara::Driver::Base
 
   def self.driver
     unless @driver
-      @driver = Selenium::WebDriver.for :firefox
+      browser_type = Capybara.selenium_browser || :firefox
+      if Capybara.selenium_remote ||  Capybara.selenium_driver_host
+        @driver = Selenium::WebDriver.for(
+        :remote,
+        :url => selenium_driver_url,
+        :desired_capabilities => browser_type
+        )
+      else
+        @driver = Selenium::WebDriver.for :browser_type
+      end
       at_exit do
         @driver.quit
       end
     end
     @driver
+  end
+  
+  def self.selenium_driver_url
+    if (driver_host = Capybara.selenium_driver_host)
+      driver_host << ":4444" unless driver_host.include?(":")
+      "http://#{driver_host}/wd/hub"
+    else
+      nil
+    end
   end
 
   def initialize(app)
