@@ -73,7 +73,7 @@ class Capybara::Driver::Selenium < Capybara::Driver::Base
         :desired_capabilities => browser_type
         )
       else
-        @driver = Selenium::WebDriver.for :browser_type
+        @driver = Selenium::WebDriver.for browser_type
       end
       at_exit do
         @driver.quit
@@ -83,7 +83,7 @@ class Capybara::Driver::Selenium < Capybara::Driver::Base
   end
   
   def self.selenium_driver_url
-    if (driver_host = Capybara.selenium_driver_host)
+    if (driver_host = Capybara.selenium_driver_host || "localhost")
       driver_host << ":4444" unless driver_host.include?(":")
       "http://#{driver_host}/wd/hub"
     else

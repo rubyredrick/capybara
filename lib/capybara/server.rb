@@ -24,14 +24,18 @@ class Capybara::Server
   end
 
   def host
-    Capybara.local_host_address || "localhost" 
+   "localhost" 
+  end
+  
+  def url_host
+    Capybara.remote_host || host
   end
 
   def url(path)
     if path =~ /^http/
       path
     else
-      (Capybara.app_host || "http://#{host}:#{port}") + path.to_s
+      (Capybara.app_host || "http://#{url_host}:#{port}") + path.to_s
     end
   end
 
@@ -64,6 +68,11 @@ class Capybara::Server
         sleep 0.5
       end
     end
+    if (wait = Capybara.server_boot_wait)
+      puts "waiting"
+      sleep wait
+      puts "proceed"
+    end
     self
   rescue Timeout::Error
     Capybara.log "Rack application timed out during boot"
@@ -78,7 +87,7 @@ private
   end
 
   def is_running_on_port?(tested_port)
-    res = Net::HTTP.start("localhost", tested_port) { |http| http.get('/__identify__') }
+    res = Net::HTTP.start(host, tested_port) { |http| http.get('/__identify__') }
 
     if res.is_a?(Net::HTTPSuccess) or res.is_a?(Net::HTTPRedirection)
       return res.body == @app.object_id.to_s
@@ -90,7 +99,7 @@ private
   def is_port_open?(tested_port)
     Timeout::timeout(1) do
       begin
-        s = TCPSocket.new("localhost", tested_port)
+        s = TCPSocket.new(host, tested_port)
         s.close
         return true
       rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
